@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:benri_app/models/recipes/recipes.dart';
 import 'package:benri_app/view_models/favourite_recipe_provider.dart';
 import 'package:benri_app/views/widgets/app_bar.dart';
+import 'package:benri_app/views/widgets/create_recipe.dart';
 import 'package:benri_app/views/widgets/my_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/constants/colors.dart';
@@ -15,7 +17,6 @@ class YourRecipeScreen extends StatelessWidget {
 
   void removeFromFavourite(Recipes recipe, BuildContext context) {
     final Recipe = context.read<FavouriteRecipeProvider>();
-
     Recipe.removeFromFavourite(recipe);
   }
 
@@ -83,12 +84,21 @@ class YourRecipeScreen extends StatelessWidget {
                                       width: 0.5, color: BColors.grey)),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  recipe.imgPath, // Use the getImagePath method
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: recipe.imgPath.startsWith('/data/')
+                                    ? Image.file(
+                                        File(recipe
+                                            .imgPath), // Load image from the local file system
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.asset(
+                                        recipe
+                                            .imgPath, // Load image from assets
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                           ),
@@ -101,7 +111,31 @@ class YourRecipeScreen extends StatelessWidget {
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [Text(recipe.timeCooking)],
+                            children: [
+                              Row(
+                                children: [
+                                  Text(recipe.rating),
+                                  SizedBox(
+                                    width: 4,
+                                  ),
+                                  Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 18,
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.lock_clock,
+                                    size: 18,
+                                    color: Colors.grey,
+                                  ),
+                                  Text(recipe.timeCooking),
+                                ],
+                              )
+                            ],
                           ),
                           onTap: () {
                             navigateToRecipeDetails(context, recipe);
@@ -112,6 +146,22 @@ class YourRecipeScreen extends StatelessWidget {
                   }),
             ),
           ],
+        ),
+        floatingActionButton: Container(
+          height: 65,
+          width: 65,
+          margin: EdgeInsets.all(5.0),
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => CreateRecipe()));
+            },
+            backgroundColor: BColors.white,
+            child: const Icon(
+              Icons.add,
+              size: 30,
+            ),
+          ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:benri_app/models/recipes/recipes.dart';
-import 'package:benri_app/utils/constants/colors.dart';
 import 'package:benri_app/view_models/favourite_recipe_provider.dart';
 import 'package:benri_app/views/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
@@ -27,9 +28,20 @@ class RecipeDetailScreen extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                Image.asset(
-                  recipe.imgPath,
-                ),
+                if (recipe.imgPath.startsWith('/data/'))
+                  Image.file(
+                    File(recipe.imgPath), // Load image from file
+                    height: 400,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                else
+                  Image.asset(
+                    recipe.imgPath, // Load image from assets
+                    // height: 200,
+                    // width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 const SizedBox(
                   height: 10,
                 ),

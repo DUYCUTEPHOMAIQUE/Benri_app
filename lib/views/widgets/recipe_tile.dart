@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:benri_app/models/recipes/recipes.dart';
 import 'package:provider/provider.dart';
@@ -51,13 +53,19 @@ class RecipeTile extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.asset(
-                    recipe.imgPath,
-                    height: 160,
+                  child: recipe.imgPath.startsWith('/data/')
+                      ? Image.file(
+                          File(recipe.imgPath),
+                          height: 160,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.asset(
+                          recipe.imgPath,
+                          height: 160,
 
-                    fit: BoxFit
-                        .cover, // Ensures the image covers the available space
-                  ),
+                          fit: BoxFit
+                              .cover, // Ensures the image covers the available space
+                        ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(

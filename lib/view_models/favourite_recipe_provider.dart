@@ -1,6 +1,8 @@
+import 'dart:io';
+
 import 'package:benri_app/models/recipes/recipes.dart';
-import 'package:benri_app/views/screens/recipe_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class FavouriteRecipeProvider extends ChangeNotifier {
   final List<Recipes> _recipes = [
@@ -92,8 +94,49 @@ class FavouriteRecipeProvider extends ChangeNotifier {
 
   final List<Recipes> _favouriteRecipes = [];
 
+  File? _imageFile; // Image file for the recipe
+  final _picker = ImagePicker(); // Image picker instance
+
   List<Recipes> get recipes => _recipes;
   List<Recipes> get favouriteRecipes => _favouriteRecipes;
+  File? get imageFile => _imageFile;
+  Future<void> pickImageFromGallery() async {
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      _imageFile = File(pickedFile.path);
+      notifyListeners();
+    }
+  }
+
+  // Method to capture image using the camera
+  Future<void> captureImageWithCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      _imageFile = File(pickedFile.path);
+      notifyListeners();
+    }
+  }
+
+  // Method to clear the image file
+  void clearImageFile() {
+    _imageFile = null;
+    notifyListeners();
+  }
+
+  void addNewRecipe(
+      String name, String description, String timeCooking, String rating) {
+    final newRecipe = Recipes(
+      name: name,
+      description: description,
+      imgPath: _imageFile?.path ?? 'assets/images/ingredient/default.png',
+      rating: rating,
+      timeCooking: timeCooking,
+    );
+    _favouriteRecipes.add(newRecipe);
+    _imageFile = null; // Clear the image after saving the recipe
+    notifyListeners();
+  }
 
   void addToFavourite(Recipes recipe) {
     _favouriteRecipes.add(recipe);
