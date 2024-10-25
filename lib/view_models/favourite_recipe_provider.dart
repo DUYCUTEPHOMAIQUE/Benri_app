@@ -134,7 +134,8 @@ class FavouriteRecipeProvider extends ChangeNotifier {
       timeCooking: timeCooking,
     );
     _favouriteRecipes.add(newRecipe);
-    _imageFile = null; // Clear the image after saving the recipe
+    _imageFile = null;
+    clearImageFile(); // Clear the image after saving the recipe
     notifyListeners();
   }
 
