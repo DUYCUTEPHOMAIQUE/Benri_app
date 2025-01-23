@@ -15,14 +15,6 @@ class DetailFridgeScreen extends StatelessWidget {
           // Get ingredients with drawer names
           final ingredientsWithDrawers = provider.getAllIngredientsWithDrawer();
 
-          // Sort ingredients by expiration date
-          ingredientsWithDrawers.sort((a, b) {
-            final DateTime expirationA = a['ingredient'].expirationDate;
-            final DateTime expirationB = b['ingredient'].expirationDate;
-            return expirationA.compareTo(
-                expirationB); // Ascending order (soonest to latest expiration)
-          });
-
           return ingredientsWithDrawers.isEmpty
               ? const Center(child: Text('No ingredients in the fridge yet.'))
               : ListView.builder(
@@ -40,6 +32,8 @@ class DetailFridgeScreen extends StatelessWidget {
                       deleteIngredient: (context) {
                         // Handle deletion if needed
                       },
+                      editIngredient: (context) {},
+                      ingredientProvider: provider,
                     );
                   },
                 );

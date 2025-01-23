@@ -12,74 +12,52 @@ class FridgeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the provider when building the widget
-    final fridgeProvider =
-        Provider.of<FridgeScreenProvider>(context, listen: false);
-
-    fridgeProvider.initialize(context);
-
-    return Scaffold(
-      appBar: BAppBar(
-        title: 'My Fridge',
-      ),
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search bar for searching ingredients
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: MySearchBar(
-                hintText: 'Search Your Ingredient',
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Consumer<FridgeScreenProvider>(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: BAppBar(
+          title: 'Tủ Lạnh',
+        ),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Consumer<FridgeScreenProvider>(
                 builder: (context, provider, child) {
                   return TabBar(
-                    controller: provider
-                        .tabController, // Use TabController from provider
-                    labelStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: BColors.black),
+                    onTap: provider.changeTab,
+                    labelStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                     unselectedLabelStyle: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[700],
                     ),
-                    indicatorColor: Colors.black,
                     indicatorWeight: 3.0,
                     tabs: const [
                       Tab(
-                        text: 'Fridge',
+                        text: 'Tủ lạnh',
+                        height: 62,
                       ),
                       Tab(
-                        text: 'Detail',
+                        text: 'Thực phẩm',
+                        height: 62,
                       ),
                     ],
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Consumer<FridgeScreenProvider>(
-                builder: (context, provider, child) {
-                  return TabBarView(
-                    controller: provider
-                        .tabController, // Use TabController from provider
-                    children: const [
-                      FridgeManageScreen(),
-                      DetailFridgeScreen(),
-                    ],
-                  );
-                },
+              const SizedBox(height: 10),
+              Expanded(
+                child: TabBarView(
+                  children: const [
+                    FridgeManageScreen(),
+                    DetailFridgeScreen(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

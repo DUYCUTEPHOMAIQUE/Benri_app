@@ -15,7 +15,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Forgot Password'),
+        title: const Text('Forgot Password'),
         centerTitle: true,
       ),
       body: Padding(
@@ -30,7 +30,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               child: Text(
                 'Forgot Password',
                 style: TextStyle(
-                  color: Color(0xFF010F07),
                   fontSize: 33,
                   fontFamily: 'Yu Gothic UI',
                   fontWeight: FontWeight.w300,
@@ -60,16 +59,15 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             const Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     "EMAIL",
-                    style:
-                        TextStyle(color: BColors.textSecondary, fontSize: 16),
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
-                TextField(
+                const TextField(
                   style: TextStyle(fontSize: 18),
                   cursorColor: BColors.primary,
                   decoration: InputDecoration(
@@ -85,7 +83,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 )
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 25,
             ),
             SizedBox(

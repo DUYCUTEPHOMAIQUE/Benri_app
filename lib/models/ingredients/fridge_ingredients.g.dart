@@ -1,44 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ingredients.dart';
+part of 'fridge_ingredients.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class IngredientAdapter extends TypeAdapter<Ingredient> {
+class FridgeIngredientAdapter extends TypeAdapter<FridgeIngredient> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
-  Ingredient read(BinaryReader reader) {
+  FridgeIngredient read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Ingredient(
+    return FridgeIngredient(
       name: fields[0] as String,
-      isSelected: fields[1] as bool,
-      quantity: fields[2] as String,
-      unit: fields[3] as String,
-      imageUrl: fields[4] as String,
+      quantity: fields[1] as String,
+      imgPath: fields[2] as String,
+      unit: fields[4] as String?,
+      expirationDate: fields[3] as DateTime?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Ingredient obj) {
+  void write(BinaryWriter writer, FridgeIngredient obj) {
     writer
       ..writeByte(5)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.isSelected)
-      ..writeByte(2)
       ..write(obj.quantity)
+      ..writeByte(2)
+      ..write(obj.imgPath)
       ..writeByte(3)
-      ..write(obj.unit)
+      ..write(obj.expirationDate)
       ..writeByte(4)
-      ..write(obj.imageUrl);
+      ..write(obj.unit);
   }
 
   @override
@@ -47,7 +47,7 @@ class IngredientAdapter extends TypeAdapter<Ingredient> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is IngredientAdapter &&
+      other is FridgeIngredientAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

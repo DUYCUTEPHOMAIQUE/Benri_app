@@ -1,138 +1,227 @@
 import 'dart:io';
-
 import 'package:benri_app/models/recipes/recipes.dart';
-import 'package:benri_app/view_models/favourite_recipe_provider.dart';
-import 'package:benri_app/views/widgets/app_bar.dart';
+import 'package:benri_app/services/recipes_service.dart';
+import 'package:benri_app/view_models/ingredient_provider.dart';
+import 'package:benri_app/views/widgets/ingredient_recipe_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
+import '../../view_models/favourite_recipe_provider.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
-  final Recipes recipe; // Pass the recipe as a parameter
-
-  const RecipeDetailScreen(
-      {super.key, required this.recipe}); // Constructor with required recipe
+  final Recipes recipe;
+  const RecipeDetailScreen({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {
-    // Access the provider directly for checking and toggling favorites
-    final favouriteRecipeProvider = context.watch<FavouriteRecipeProvider>();
-
-    // Check if this recipe is a favourite
-    bool isFavourite = favouriteRecipeProvider.isFavourite(recipe);
-
-    return Scaffold(
-      appBar: BAppBar(title: recipe.name),
-      body: Column(
-        // ListView for food detail
-        children: [
-          Expanded(
-            child: ListView(
-              children: [
-                if (recipe.imgPath.startsWith('/data/'))
-                  Image.file(
-                    File(recipe.imgPath), // Load image from file
-                    height: 400,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  )
-                else
-                  Image.asset(
-                    recipe.imgPath, // Load image from assets
-                    // height: 200,
-                    // width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+    return Consumer<FavouriteRecipeProvider>(
+      builder: (context, provider, _) {
+        final ingredientStatus =
+            RecipesService.checkIngredientsAvailable(recipe.ingredients);
+        final ingredientProvider =
+            Provider.of<IngredientProvider>(context, listen: false);
+        print(recipe.imgPath);
+        print('2222');
+        return Scaffold(
+          extendBodyBehindAppBar: true,
+          body: Stack(
+            children: [
+              // Main Content
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Section with Image
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.45,
+                      width: double.infinity,
+                      child: Stack(
                         children: [
-                          Icon(
-                            Icons.star,
-                            color: Colors.yellow[800],
-                            size: 25,
+                          // Recipe Image
+                          Positioned.fill(
+                            child: recipe.imgPath ==
+                                    'assets/images/ingredient/default.png'
+                                ? Image.asset(recipe.imgPath)
+                                : Image.network(
+                                    recipe.imgPath,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            recipe.rating,
-                            style: TextStyle(fontSize: 20),
+                          // Recipe Info Card
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Recipe Title and Favorite Button
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          recipe.name,
+                                          style: const TextStyle(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Time and Rating
+                                  Row(
+                                    children: [
+                                      const Icon(Iconsax.clock,
+                                          size: 20, color: Colors.grey),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        recipe.timeCooking,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      const Icon(Icons.star,
+                                          color: Colors.amber),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${recipe.rating}/5',
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(right: 15),
-                        child: GestureDetector(
-                          onTap: () {
-                            // Toggle favourite status using the provider
-                            favouriteRecipeProvider.toggleFavourite(recipe);
+                    ),
+                    // Ingredients Section
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Ingredients",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // const SizedBox(height: 16),
+                          ConstrainedBox(
+                            constraints: provider.isShowAll
+                                ? BoxConstraints(
+                                    maxHeight: recipe.ingredients.length * 84)
+                                : const BoxConstraints(maxHeight: 252),
+                            child: recipe.ingredients.isEmpty
+                                ? const Text('No ingredients found')
+                                : ListView.builder(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemCount: ingredientStatus.length,
+                                    itemBuilder: (context, index) {
+                                      final ingredient =
+                                          ingredientStatus[index]['ingredient'];
+                                      final isAvailable =
+                                          ingredientStatus[index]
+                                              ['isAvailable'];
+                                      final drawerName =
+                                          ingredientStatus[index]['drawerName'];
+                                      final imgUrl = ingredientProvider
+                                          .getImageUrlFromLocalStorage(
+                                        recipe.ingredients[index].name,
+                                      );
 
-                            // Show Snackbar for feedback
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  isFavourite
-                                      ? "Removed from Favourites"
-                                      : "Added to Favourites",
+                                      return IngredientRecipeTile(
+                                        ingredient: ingredient,
+                                        isAvailable: isAvailable,
+                                        drawerName: drawerName,
+                                        imgUrl: imgUrl,
+                                      );
+                                    },
+                                  ),
+                          ),
+                          if (recipe.ingredients.length > 3)
+                            GestureDetector(
+                              onTap: provider.toggleShowAll,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  provider.isShowAll ? 'Show less' : 'Show all',
+                                  style: const TextStyle(color: Colors.grey),
                                 ),
                               ),
-                            );
-                          },
-                          child: Icon(
-                            isFavourite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isFavourite ? Colors.red : Colors.grey,
+                            ),
+                          // Description Section
+                          const SizedBox(height: 16),
+
+                          const Text(
+                            "Description",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      )
-                    ],
+                          const SizedBox(height: 8),
+                          Text(
+                            recipe.description,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Back Button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 10,
+                child: Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new),
+                    ),
                   ),
                 ),
-                SizedBox(
-                  height: 5,
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    recipe.name,
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SizedBox(
-                  height: 5,
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    "Description",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SizedBox(
-                  height: 5,
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    recipe.description,
-                    style: TextStyle(color: Colors.grey[600], height: 2),
-                  ),
-                ),
-                SizedBox(
-                  height: 100,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

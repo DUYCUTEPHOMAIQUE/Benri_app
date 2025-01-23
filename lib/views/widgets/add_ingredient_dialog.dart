@@ -1,12 +1,11 @@
 import 'package:benri_app/models/ingredients/ingredient_suggestions.dart';
-import 'package:benri_app/utils/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:benri_app/models/ingredients/ingredients.dart';
+import 'package:benri_app/models/ingredients/basket_ingredients.dart';
 import 'package:benri_app/view_models/basket_viewmodel.dart';
 
-Future<Ingredient?> addIngredientDialog(BuildContext context,
-    {Ingredient? ingredient}) {
+Future<BasketIngredient?> addIngredientDialog(BuildContext context,
+    {BasketIngredient? ingredient}) {
   final TextEditingController nameInputController =
       TextEditingController(text: ingredient?.name ?? '');
   final TextEditingController quantityInputController =
@@ -17,12 +16,28 @@ Future<Ingredient?> addIngredientDialog(BuildContext context,
   final basketViewModel = Provider.of<BasketViewModel>(context, listen: false);
   final List<String> unitOptions = ['gam', 'kg', 'hộp', 'quả', 'lít'];
 
+  final List<String> ingredientCategories = [
+    'Thịt',
+    'Hải sản',
+    'Rau cải',
+    'Trái cây',
+    'Đồ uống',
+    'Đồ khô',
+    'Đồ ăn chay',
+    'Đồ ăn nhanh',
+    'Đồ ăn sáng',
+    'Đồ ăn vặt',
+    'Đồ ăn chính',
+    'Đồ ăn phụ',
+    'Đồ ăn tráng miệng',
+    'Đồ ăn khác',
+  ];
+
   bool isInitialized = false;
 
-  return showModalBottomSheet<Ingredient>(
+  return showModalBottomSheet<BasketIngredient>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
     builder: (context) {
       return ChangeNotifierProvider<BasketViewModel>.value(
         value: basketViewModel,
@@ -58,17 +73,17 @@ Future<Ingredient?> addIngredientDialog(BuildContext context,
                       return TextFormField(
                         controller: fieldTextEditingController,
                         focusNode: fieldFocusNode,
-                        cursorColor: Colors.black,
                         decoration: InputDecoration(
                           labelText: 'Tên nguyên liệu',
-                          labelStyle: TextStyle(color: Colors.black),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide(color: BColors.black),
+                            borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.outline),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide(color: BColors.black),
+                            borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary),
                           ),
                         ),
                         onChanged: (value) {
@@ -84,38 +99,42 @@ Future<Ingredient?> addIngredientDialog(BuildContext context,
                     onSelected: (IngredientSuggestion option) =>
                         nameInputController.text = option.name,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: quantityInputController,
-                    cursorColor: Colors.black,
+                    cursorColor: Theme.of(context).colorScheme.primary,
                     decoration: InputDecoration(
                       labelText: 'Số lượng',
-                      labelStyle: TextStyle(color: BColors.black),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: BColors.black),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: BColors.black),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: unitInputController,
-                    cursorColor: Colors.black,
+                    cursorColor: Theme.of(context).colorScheme.primary,
                     decoration: InputDecoration(
                       labelText: 'Đơn vị',
-                      labelStyle: TextStyle(color: BColors.black),
+                      labelStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: BColors.black),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: BColors.black),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
                     keyboardType: TextInputType.text,
@@ -127,7 +146,7 @@ Future<Ingredient?> addIngredientDialog(BuildContext context,
                       }
                     },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     alignment: WrapAlignment.spaceBetween,
                     spacing: 20.0,
@@ -140,44 +159,71 @@ Future<Ingredient?> addIngredientDialog(BuildContext context,
                           });
                           return ChoiceChip(
                             label: Text(unit),
-                            backgroundColor: BColors.accent,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
                             selected: basketViewModel.selectedUnit == unit,
                             onSelected: (bool selected) {
                               basketViewModel
                                   .updateSelectedUnit(selected ? unit : null);
-                              // Update unitInputController only when ChoiceChip is selected
                               unitInputController.text =
                                   basketViewModel.selectedUnit ?? '';
                             },
-                            selectedColor: BColors.primaryFirst,
+                            selectedColor:
+                                Theme.of(context).colorScheme.primary,
                           );
                         },
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  const Text('Phân loại:'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: ingredientCategories.map((category) {
+                      return Consumer<BasketViewModel>(
+                        builder: (context, basketViewModel, child) {
+                          return ChoiceChip(
+                            label: Text(category),
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
+                            selected:
+                                basketViewModel.selectedCategory == category,
+                            onSelected: (bool selected) {
+                              basketViewModel.updateSelectedCategory(
+                                  selected ? category : null);
+                            },
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: BColors.primaryFirst,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () {
-                      final updatedIngredient = Ingredient(
+                      final updatedIngredient = BasketIngredient(
                         name: nameInputController.text,
                         quantity: quantityInputController.text,
                         unit: unitInputController.text,
                         imageUrl: basketViewModel.getImageUrlFromLocalStorage(
                             nameInputController.text),
+                        category: basketViewModel.selectedCategory ?? 'Khác',
                       );
                       Navigator.pop(context, updatedIngredient);
                     },
-                    child: const Text(
-                      'Add',
+                    child: Text(
+                      'Thêm',
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

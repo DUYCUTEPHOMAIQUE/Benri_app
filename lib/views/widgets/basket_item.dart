@@ -1,11 +1,11 @@
-import 'package:benri_app/models/ingredients/ingredients.dart';
+import 'package:benri_app/models/ingredients/basket_ingredients.dart';
 import 'package:benri_app/utils/constants/colors.dart';
 import 'package:benri_app/view_models/basket_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class BasketItem extends StatelessWidget {
-  final Ingredient ingredient;
+  final BasketIngredient ingredient;
   final int index;
   final bool isSelected;
   final BasketViewModel basketViewModel;
@@ -43,8 +43,8 @@ class BasketItem extends StatelessWidget {
         ],
       ),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.0),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(
               color: BColors.grey,
@@ -54,7 +54,7 @@ class BasketItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 15,
             ),
             Transform.scale(
@@ -79,7 +79,7 @@ class BasketItem extends StatelessWidget {
                     'assets/images/ingredient/default.png',
                     width: 80,
                   )),
-            SizedBox(
+            const SizedBox(
               width: 15,
             ),
             Column(
@@ -100,6 +100,16 @@ class BasketItem extends StatelessWidget {
                       decoration: ingredient.isSelected
                           ? TextDecoration.lineThrough
                           : TextDecoration.none),
+                ),
+                Text(
+                  ingredient.category,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    decoration: ingredient.isSelected
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                  ),
                 ),
               ],
             ),

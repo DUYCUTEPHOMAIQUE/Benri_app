@@ -1,17 +1,14 @@
 import 'package:benri_app/models/ingredients/ingredient_suggestions.dart';
-import 'package:benri_app/models/ingredients/ingredients.dart';
+import 'package:benri_app/models/ingredients/basket_ingredients.dart';
+import 'package:benri_app/services/baskets_service.dart';
 import 'package:benri_app/utils/constants/ingredient_suggestions_db.dart';
-import 'package:benri_app/utils/constants/local_db.dart';
-import 'package:benri_app/views/widgets/add_ingredient_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 
 class BasketViewModel extends ChangeNotifier {
-  final _basketBox = Hive.box('basketBox');
   final _ingredientSuggestionsBox = Hive.box('ingredientSuggestionsBox');
 
-  BasketsLocalDB db = BasketsLocalDB();
   IngredientSuggestionsDB ingredientsDB = IngredientSuggestionsDB();
 
   List<IngredientSuggestion> filteredIngredientSuggestions = [];
@@ -19,34 +16,40 @@ class BasketViewModel extends ChangeNotifier {
   final DateFormat _dateFormat = DateFormat('yMd');
   DateTime _focusDate = DateTime.now();
 
-  // Constructor to initialize data
-  BasketViewModel() {
-    _initializeData();
-  }
+  final TextEditingController totalMoneyController = TextEditingController();
+
+  String _selectedMode = 'Cá nhân';
+  String get selectedMode => _selectedMode;
+
+  bool get hasFamily => _hasFamily;
+  bool _hasFamily = false;
 
   String get focusDateFormatted => _dateFormat.format(_focusDate);
   DateTime get focusDate => _focusDate;
 
   String? _selectedUnit;
-
   String? get selectedUnit => _selectedUnit;
+
+  String? _selectedCategory;
+  String? get selectedCategory => _selectedCategory;
+
+  BasketViewModel() {
+    _initializeData();
+  }
 
   void updateSelectedUnit(String? unit) {
     _selectedUnit = unit;
     notifyListeners();
   }
 
-  // Initialize data when the app is first opened
-  void _initializeData() {
-    if (_basketBox.get('isFirstTime') == null) {
-      db.createInitialData();
-      db.updateDatabase();
-      _basketBox.put('isFirstTime', false);
-      notifyListeners();
-    } else {
-      db.loadData();
-    }
+  void updateSelectedCategory(String? category) {
+    _selectedCategory = category;
+    notifyListeners();
+  }
 
+  void _initializeData() {
+    BasketService.initializeLocalData();
+    // Initialize ingredient suggestions
     if (_ingredientSuggestionsBox.get('isFirstTime') == null) {
       ingredientsDB.createInitialData();
       _ingredientSuggestionsBox.put('isFirstTime', false);
@@ -59,54 +62,28 @@ class BasketViewModel extends ChangeNotifier {
 
   void updateFocusDate(DateTime date) {
     _focusDate = date;
-    _initializeBasketsForDate(_focusDate);
+    BasketService.initializeBasketsForDate(focusDateFormatted);
     notifyListeners();
   }
 
-  void _initializeBasketsForDate(DateTime date) {
-    String formattedDate = _dateFormat.format(date);
-    if (!db.baskets.containsKey(formattedDate)) {
-      db.baskets[formattedDate] = [];
-    }
-  }
-
-  void addIngredient(Ingredient ingredient) {
-    _initializeBasketsForDate(_focusDate);
-    db.baskets[focusDateFormatted]!.add(ingredient);
-    db.updateDatabase();
+  void addIngredient(BasketIngredient ingredient) {
+    BasketService.addIngredient(focusDateFormatted, ingredient);
     notifyListeners();
   }
 
   void toggleIngredientSelection(int index) {
-    if (index >= 0 && index < db.baskets[focusDateFormatted]!.length) {
-      db.baskets[focusDateFormatted]![index].isSelected =
-          !db.baskets[focusDateFormatted]![index].isSelected;
-      db.updateDatabase();
-      notifyListeners();
-    }
+    BasketService.toggleIngredientSelection(focusDateFormatted, index);
+    notifyListeners();
   }
 
   void deleteBasketItem(int index) {
-    if (index >= 0 && index < db.baskets[focusDateFormatted]!.length) {
-      db.baskets[focusDateFormatted]!.removeAt(index);
-      db.updateDatabase();
-      notifyListeners();
-    }
+    BasketService.deleteBasketItem(focusDateFormatted, index);
+    notifyListeners();
   }
 
-  void editBasketItem(BuildContext context, int index) async {
-    if (index >= 0 && index < db.baskets[focusDateFormatted]!.length) {
-      Ingredient currentIngredient = db.baskets[focusDateFormatted]![index];
-
-      Ingredient? updatedIngredient =
-          await addIngredientDialog(context, ingredient: currentIngredient);
-
-      if (updatedIngredient != null) {
-        db.baskets[focusDateFormatted]![index] = updatedIngredient;
-        db.updateDatabase();
-        notifyListeners();
-      }
-    }
+  void editBasketItem(BuildContext context, int index) {
+    BasketService.editBasketItem(context, focusDateFormatted, index);
+    notifyListeners();
   }
 
   void updateCalendarFocusDate(DateTime date, DateTime focusDate) {
@@ -118,9 +95,7 @@ class BasketViewModel extends ChangeNotifier {
     return _dateFormat.format(date);
   }
 
-  // Filter ingredient suggestions based on user input
   void filterIngredientSuggestions(String query) {
-    print('Query length: ${query.length}');
     if (query.isNotEmpty) {
       filteredIngredientSuggestions = ingredientsDB.ingredientSuggestions
           .where((ingredient) =>
@@ -132,7 +107,6 @@ class BasketViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Clear the suggestion list
   void clearIngredientSuggestions() {
     filteredIngredientSuggestions = [];
     notifyListeners();
@@ -143,12 +117,41 @@ class BasketViewModel extends ChangeNotifier {
       final ingredient = ingredientsDB.ingredientSuggestions.firstWhere(
         (i) => i.name.toLowerCase() == ingredientName.toLowerCase(),
         orElse: () => IngredientSuggestion(
-            name: '',
-            thumbnailUrl: '',
-            nameInVietnamese: ''), // If not found, return null
+            name: '', thumbnailUrl: '', nameInVietnamese: ''),
       );
       return ingredient.thumbnailUrl;
     }
-    return ''; // Return empty string if ingredient is not found or name is empty
+    return '';
+  }
+
+  bool checkBasketIngredientsEmpty(String date) {
+    return BasketService.baskets.containsKey(date) &&
+        BasketService.baskets[date]!.basketIngredients.isNotEmpty;
+  }
+
+  void updateTotalMoney(String totalMoney) {
+    BasketService.updateTotalMoney(focusDateFormatted, totalMoney);
+    notifyListeners();
+  }
+
+  String getTotalMoney() {
+    if (BasketService.baskets.containsKey(focusDateFormatted)) {
+      return BasketService.baskets[focusDateFormatted]!.totalMoney;
+    }
+    return '0';
+  }
+
+  void changeMode(String mode) {
+    _selectedMode = mode;
+    if (mode == 'Gia đình') {
+      _hasFamily = true;
+    }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    totalMoneyController.dispose();
+    super.dispose();
   }
 }

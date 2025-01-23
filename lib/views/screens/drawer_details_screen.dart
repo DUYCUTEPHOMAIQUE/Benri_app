@@ -1,3 +1,4 @@
+import 'package:benri_app/services/fridge_drawers_serivce.dart';
 import 'package:benri_app/utils/constants/colors.dart';
 import 'package:benri_app/view_models/ingredient_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,22 +12,6 @@ class DrawerDetailsScreen extends StatelessWidget {
   final String drawerName;
   const DrawerDetailsScreen({super.key, required this.drawerName});
 
-  // Method to show the BottomSheet and add an ingredient
-  void addIngredientIntoFridge(BuildContext context) async {
-    final newIngredient =
-        await addIngredientDialog(context); // Using your BottomSheet dialog
-    if (newIngredient != null) {
-      Provider.of<IngredientProvider>(context, listen: false)
-          .addIngredient(drawerName, newIngredient); // Add to specific drawer
-    }
-  }
-
-  // Method to delete an ingredient from the fridge
-  void deleteIngredientFridge(BuildContext context, int index) {
-    Provider.of<IngredientProvider>(context, listen: false)
-        .removeIngredient(drawerName, index); // Remove from specific drawer
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,28 +21,37 @@ class DrawerDetailsScreen extends StatelessWidget {
       ),
       body: Consumer<IngredientProvider>(
         builder: (context, provider, child) {
-          final ingredients = provider.getIngredientsForDrawer(
-              drawerName); // Get ingredients for this drawer
-          return ingredients.isEmpty
-              ? const Center(child: Text('No ingredients in the fridge yet.'))
-              : ListView.builder(
+          final ingredients = provider.getIngredientsForDrawer(drawerName);
+          return ingredients.isNotEmpty
+              ? ListView.builder(
                   itemCount: ingredients.length,
                   itemBuilder: (context, index) {
                     return IngredientFridgeView(
                       ingredient: ingredients[index],
                       deleteIngredient: (context) =>
-                          deleteIngredientFridge(context, index),
+                          provider.removeIngredient(drawerName, index),
+                      editIngredient: (context) =>
+                          provider.editIngredient(context, drawerName, index),
+                      ingredientProvider: provider,
                     );
                   },
-                );
+                )
+              : const Center(child: Text('No ingredients in the fridge yet.'));
         },
       ),
       floatingActionButton: Container(
         height: 65,
         width: 65,
-        margin: EdgeInsets.all(5),
+        margin: const EdgeInsets.all(5),
         child: FloatingActionButton(
-          onPressed: () => addIngredientIntoFridge(context),
+          heroTag: 'drawer_detail_${drawerName}_fab',
+          onPressed: () async {
+            final newIngredient = await addFridgeIngredientDialog(context);
+            if (newIngredient != null) {
+              Provider.of<IngredientProvider>(context, listen: false)
+                  .addIngredient(drawerName, newIngredient);
+            }
+          },
           backgroundColor: BColors.white,
           child: const Icon(
             Icons.add,

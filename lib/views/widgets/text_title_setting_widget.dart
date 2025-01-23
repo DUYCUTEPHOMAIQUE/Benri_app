@@ -1,7 +1,7 @@
 import 'package:benri_app/utils/constants/colors.dart';
 import 'package:flutter/material.dart';
 
-Widget textTitleSettingWidget(String title) {
+Widget textTitleSettingWidget(String title, BuildContext context) {
   return Padding(
     padding: const EdgeInsets.only(
       left: 8,
@@ -15,10 +15,10 @@ Widget textTitleSettingWidget(String title) {
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: BColors.textPrimary),
+              color: Theme.of(context).colorScheme.secondaryFixed),
         ),
         Divider(
-          color: BColors.textPrimary.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.secondaryFixed,
         ),
       ],
     ),
